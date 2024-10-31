@@ -8,6 +8,8 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import java.util.List;
+
 
 public interface DishService {
     /**
@@ -24,4 +26,11 @@ public interface DishService {
      * @return
      */
     PageResult pageQuery(DishPageQueryDTO dishPageQueryDTO);
+
+    /**
+     * 菜品批量删除
+     *
+     * @param ids
+     */
+    void deleteBatch(List<Long> ids);
 }
