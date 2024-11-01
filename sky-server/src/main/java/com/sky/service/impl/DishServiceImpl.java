@@ -8,6 +8,7 @@ import com.sky.dto.DishDTO;
 import com.sky.dto.DishPageQueryDTO;
 import com.sky.entity.Dish;
 import com.sky.entity.DishFlavor;
+import com.sky.entity.Setmeal;
 import com.sky.exception.DeletionNotAllowedException;
 import com.sky.mapper.DishFlavorMapper;
 import com.sky.mapper.DishMapper;
@@ -24,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+
 @Service
 @Slf4j
 public class DishServiceImpl implements DishService {
@@ -54,7 +56,7 @@ public class DishServiceImpl implements DishService {
         Long dishId = dish.getId();
 
         List<DishFlavor> flavors = dishDto.getFlavors();
-        if(flavors!= null && flavors.size() > 0){
+        if (flavors != null && flavors.size() > 0) {
             //向口味表中插入n条数据
             flavors.forEach(flavor -> {
                 flavor.setDishId(dishId);
@@ -77,7 +79,6 @@ public class DishServiceImpl implements DishService {
     }
 
 
-
     /**
      * 菜品批量删除
      *
@@ -95,7 +96,7 @@ public class DishServiceImpl implements DishService {
         }
 
         //判断当前菜品是否能够删除---是否被套餐关联了？？
-        List<Long> setmealIds = setmealDishMapper.getSetmealIdsByDishIds(ids);
+        List<Long> setmealIds = setmealDishMapper.getSetmealIdByDishIds(ids);
         if (setmealIds != null && setmealIds.size() > 0) {
             //当前菜品被套餐关联了，不能删除
             throw new DeletionNotAllowedException(MessageConstant.DISH_BE_RELATED_BY_SETMEAL);
@@ -129,6 +130,7 @@ public class DishServiceImpl implements DishService {
 
         return dishVO;
     }
+
     /**
      * 根据id更新菜品以及口味
      *
@@ -149,7 +151,7 @@ public class DishServiceImpl implements DishService {
         // 保存菜品的口味
 
         List<DishFlavor> flavors = dishDTO.getFlavors();
-        if(flavors!= null && flavors.size() > 0){
+        if (flavors != null && flavors.size() > 0) {
             //向口味表中插入n条数据
             flavors.forEach(flavor -> {
                 flavor.setDishId(dishDTO.getId());
@@ -160,6 +162,7 @@ public class DishServiceImpl implements DishService {
 
     /**
      * 条件查询菜品和口味
+     *
      * @param dish
      * @return
      */
@@ -170,7 +173,7 @@ public class DishServiceImpl implements DishService {
 
         for (Dish d : dishList) {
             DishVO dishVO = new DishVO();
-            BeanUtils.copyProperties(d,dishVO);
+            BeanUtils.copyProperties(d, dishVO);
 
             //根据菜品id查询对应的口味
             List<DishFlavor> flavors = dishFlavorMapper.getByDishId(d.getId());
@@ -180,5 +183,35 @@ public class DishServiceImpl implements DishService {
         }
 
         return dishVOList;
+    }
+
+    /**
+     * 启用或禁用菜品
+     *
+     * @param status
+     * @param id
+     */
+    @Override
+    public void startOrStop(Integer status, Long id) {
+        Dish dish = new Dish();
+        dish.setId(id);
+        dish.setStatus(status);
+        dishMapper.update(dish);
+
+        // 如果是禁用，需要将套餐中的菜品也禁用
+        if (status == StatusConstant.DISABLE) {
+            List<Long> dishIds = new ArrayList<>();
+            dishIds.add(id);
+            List<Long> setmealIds = setmealDishMapper.getSetmealIdByDishIds(dishIds);
+            if (setmealIds != null && setmealIds.size() > 0) {
+                for (Long setmealId : setmealIds) {
+                    Setmeal setmeal = Setmeal.builder()
+                            .id(setmealId)
+                            .status(StatusConstant.DISABLE)
+                            .build();
+                    setmealMapper.update(setmeal);
+                }
+            }
+        }
     }
 }

@@ -15,5 +15,7 @@ public interface SetmealDishMapper {
      * @return
      */
     //select setmeal_id from setmeal_dish where dish_id in (1,2,3,4)
-    List<Long> getSetmealIdsByDishIds(List<Long> dishIds);
+    List<Long> getSetmealIdByDishIds(List<Long> dishIds);
+
+
 }
