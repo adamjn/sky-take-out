@@ -35,7 +35,9 @@ public class ShoppingCartController {
         log.info("添加购物车：{}", shoppingCartDTO);
         shoppingCartService.addShoppingCart(shoppingCartDTO);//后绪步骤实现
         return Result.success();
-    }	/**
+    }
+
+    /**
      * 查看购物车
      * @return
      */

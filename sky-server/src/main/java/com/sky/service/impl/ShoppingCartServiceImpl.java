@@ -9,6 +9,7 @@ import com.sky.mapper.DishMapper;
 import com.sky.mapper.SetmealMapper;
 import com.sky.mapper.ShoppingCartMapper;
 import com.sky.service.ShoppingCartService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@Slf4j
 public class ShoppingCartServiceImpl implements ShoppingCartService {
 
     @Autowired
@@ -39,7 +41,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         //判断当前商品是否在购物车中
         List<ShoppingCart> shoppingCartList = shoppingCartMapper.list(shoppingCart);
 
-        if (shoppingCartList != null && shoppingCartList.size() == 1) {
+        if (shoppingCartList != null && shoppingCartList.size()>0) {
             //如果已经存在，就更新数量，数量加1
             shoppingCart = shoppingCartList.get(0);
             shoppingCart.setNumber(shoppingCart.getNumber() + 1);
@@ -72,7 +74,13 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
      * @return
      */
     public List<ShoppingCart> showShoppingCart() {
-        return shoppingCartMapper.list(ShoppingCart.builder().userId(BaseContext.getCurrentId()).build());
+        //获取到当前微信用户的id
+        Long userId = BaseContext.getCurrentId();
+        ShoppingCart shoppingCart = ShoppingCart.builder()
+                .userId(userId)
+                .build();
+        List<ShoppingCart> list = shoppingCartMapper.list(shoppingCart);
+        return list;
     }
     /**
      * 清空购物车商品
